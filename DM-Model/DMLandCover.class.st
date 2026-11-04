@@ -9,9 +9,19 @@ Class {
 }
 
 { #category : 'testing' }
+DMLandCover class >> isForest [
+	^ false
+]
+
+{ #category : 'testing' }
 DMLandCover >> color [
 	^ self subclassResponsibility
 
+]
+
+{ #category : 'initialization' }
+DMLandCover >> evolve [
+	
 ]
 
 { #category : 'testing' }

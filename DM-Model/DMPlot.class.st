@@ -11,6 +11,14 @@ Class {
 	#package : 'DM-Model'
 }
 
+{ #category : 'as yet unclassified' }
+DMPlot >> becomeForest: aForestClass low: lowCount high: highCount [
+
+	landCover isForest ifTrue: [ landCover removeAllTrees ].
+	self landCover: aForestClass new.
+	landCover addLow: lowCount high: highCount
+]
+
 { #category : 'initialization' }
 DMPlot >> elevation [
 	^ elevation
@@ -75,9 +83,13 @@ DMPlot >> owner: anObject [
 { #category : 'as yet unclassified' }
 DMPlot >> pov [
 	<pov>
-	| borderWidth borderColor |
+	| visible borderWidth borderColor |
+	visible := self isOnIsland or: [
+		self neighbourhood anySatisfy: [ :n | n isOnIsland ] ].
 	borderWidth := 0.01.
-	borderColor := CMColor gray.
+	borderColor := visible
+		ifTrue: [ CMColor gray ]
+		ifFalse: [ CMColor white ].
 	self hasOwner ifTrue: [
 		borderColor := owner displayColor.
 		borderWidth := 0.05 ].

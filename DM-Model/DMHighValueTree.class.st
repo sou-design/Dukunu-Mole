@@ -10,3 +10,14 @@ DMHighValueTree >> initialize [
 	super initialize.
 	value := 7
 ]
+
+{ #category : 'testing' }
+DMHighValueTree >> isHighValue [
+	^ true
+]
+
+{ #category : 'accessing' }
+DMHighValueTree >> pov [
+	<pov>
+	^ CMPointOfView tile: DMTiles highValueTree size: 0.26
+]

@@ -10,3 +10,9 @@ DMLowValueTree >> initialize [
 	super initialize.
 	value := 5  
 ]
+
+{ #category : 'accessing' }
+DMLowValueTree >> pov [
+	<pov>
+	^ CMPointOfView tile: DMTiles lowValueTree size: 0.2
+]

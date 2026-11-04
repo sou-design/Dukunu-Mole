@@ -5,10 +5,11 @@ Class {
 	#package : 'DM-Model'
 }
 
-{ #category : 'accessing' }
+{ #category : 'testing' }
 DMOutside >> color [
-	^ Color white
-
+	^ (plot neighbourhood anySatisfy: [ :n | n isOnIsland ])
+		ifTrue: [ CMColor fromHexString: '5B9BD5' ]
+		ifFalse: [ CMColor white ]
 ]
 
 { #category : 'testing' }

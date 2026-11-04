@@ -1,6 +1,6 @@
 Class {
 	#name : 'DMTree',
-	#superclass : 'Object',
+	#superclass : 'CMAgent',
 	#instVars : [
 		'value'
 	],
@@ -12,6 +12,11 @@ Class {
 DMTree >> initialize [
 	super initialize.
 	value := 0
+]
+
+{ #category : 'testing' }
+DMTree >> isHighValue [
+	^ false
 ]
 
 { #category : 'initialization' }
