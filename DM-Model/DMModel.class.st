@@ -26,18 +26,18 @@ DMModel >> applyInitialBoard [
 	index := 0.
 	1 to: 8 do: [ :i |
 		1 to: 6 do: [ :j |
-			| plot cover |
+			| plot |
 			index := index + 1.
 			plot := self cellAt: i at: j.
-			cover := (self coverClasses at: (self coverMatrix at: index)) new.
-			cover isForest ifTrue: [
-				(self lowValueTreesMatrix at: index) timesRepeat: [ cover addTree: DMLowValueTree new ].
-				(self highValueTreesMatrix at: index) timesRepeat: [ cover addTree: DMHighValueTree new ] ].
-			plot
-				landCover: cover;
-				elevation: (self elevationMatrix at: index);
-				hasRoad: (self roadMatrix at: index) = 1;
-				owner: (self ownerCodes at: (self ownerMatrix at: index)) ] ]
+			plot landCover: (self newCoverAt: index).
+			plot elevation: (self elevationMatrix at: index).
+			plot hasRoad: (self roadMatrix at: index) = 1.
+			self setOwnerOf: plot code: (self ownerMatrix at: index) ] ]
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> communityOfColor: aSymbol [
+	^ (self entitiesOfClass: DMCommunity) detect: [ :c | c color = aSymbol ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -62,6 +62,12 @@ DMModel >> coverMatrix [
 	X F F F X X
 	X X F F X X
 	X X U X X X )
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> createCommunities [
+	#( blue green red yellow ) do: [ :c |
+		(self newEntity: DMCommunity) color: c ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -94,6 +100,7 @@ DMModel >> highValueTreesMatrix [
 DMModel >> init [
 	<init>
 	self createGridNumberOfRows: 8 numberOfColumns: 6 neighbourhood: 6 closed: true.
+	self createCommunities.
 	self applyInitialBoard
 ]
 
@@ -119,6 +126,16 @@ DMModel >> lowValueTreesMatrix [
 	0 0 0 0 0 0
 	0 0 0 0 0 0
 	0 0 0 0 0 0 )
+]
+
+{ #category : 'accessing' }
+DMModel >> newCoverAt: index [
+	| cover |
+	cover := (self coverClasses at: (self coverMatrix at: index)) new.
+	cover isForest ifTrue: [
+		(self lowValueTreesMatrix at: index) timesRepeat: [ cover addTree: DMLowValueTree new ].
+		(self highValueTreesMatrix at: index) timesRepeat: [ cover addTree: DMHighValueTree new ] ].
+	^ cover
 ]
 
 { #category : 'as yet unclassified' }
@@ -156,6 +173,15 @@ DMModel >> roadMatrix [
 	0 1 0 1 0 0
 	0 0 1 1 0 0
 	0 0 1 0 0 0 )
+]
+
+{ #category : 'accessing' }
+DMModel >> setOwnerOf: aPlot code: aCode [
+	| community |
+	aCode = #N ifTrue: [ ^ self ].
+	community := self communityOfColor: (self ownerCodes at: aCode).
+	aPlot owner: community.
+	community addOwnedPlot: aPlot
 ]
 
 { #category : 'as yet unclassified' }

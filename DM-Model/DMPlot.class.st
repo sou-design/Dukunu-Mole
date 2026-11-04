@@ -75,7 +75,17 @@ DMPlot >> owner: anObject [
 { #category : 'as yet unclassified' }
 DMPlot >> pov [
 	<pov>
-	^ CMPointOfView color: landCover color
+	| borderWidth borderColor |
+	borderWidth := 0.01.
+	borderColor := CMColor gray.
+	self hasOwner ifTrue: [
+		borderColor := owner displayColor.
+		borderWidth := 0.05 ].
+	^ CMPointOfView new
+		color: landCover color;
+		borderWidth: borderWidth;
+		borderColor: borderColor;
+		yourself
 ]
 
 { #category : 'as yet unclassified' }
