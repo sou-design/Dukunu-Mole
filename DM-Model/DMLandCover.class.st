@@ -13,6 +13,11 @@ DMLandCover class >> isForest [
 	^ false
 ]
 
+{ #category : 'accessing' }
+DMLandCover >> code [
+	^ self subclassResponsibility
+]
+
 { #category : 'testing' }
 DMLandCover >> color [
 	^ self subclassResponsibility

@@ -11,6 +11,11 @@ DMSecondaryForest >> canRegrow [
 ]
 
 { #category : 'accessing' }
+DMSecondaryForest >> code [
+	^ 'S'
+]
+
+{ #category : 'accessing' }
 DMSecondaryForest >> color [
 	^ Color r: 0.49 g: 0.73 b: 0.34
 ]

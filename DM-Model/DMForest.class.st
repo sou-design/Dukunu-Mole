@@ -84,11 +84,6 @@ DMForest >> isForest [
 ]
 
 { #category : 'testing' }
-DMForest >> low: lowCount high: highCount [
-	^ self new addLow: lowCount high: highCount; yourself
-]
-
-{ #category : 'testing' }
 DMForest >> lowValueTrees [
 	^ trees count: [ :t | t isHighValue not ]
 ]
@@ -115,11 +110,6 @@ DMForest >> removeTree: aTree [
 { #category : 'as yet unclassified' }
 DMForest >> transition [
 	^ self subclassResponsibility
-]
-
-{ #category : 'as yet unclassified' }
-DMForest >> treeSlots [
-	^ { 0.3 @ 0.55. 0.5 @ 0.55. 0.7 @ 0.55. 0.4 @ 0.78. 0.6 @ 0.78. 0.5 @ 0.32 }
 ]
 
 { #category : 'testing' }

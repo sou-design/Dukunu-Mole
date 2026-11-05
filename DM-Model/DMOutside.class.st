@@ -5,6 +5,11 @@ Class {
 	#package : 'DM-Model'
 }
 
+{ #category : 'accessing' }
+DMOutside >> code [
+	^ 'X'
+]
+
 { #category : 'testing' }
 DMOutside >> color [
 	^ (plot neighbourhood anySatisfy: [ :n | n isOnIsland ])

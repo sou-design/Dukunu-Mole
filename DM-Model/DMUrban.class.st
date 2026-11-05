@@ -6,6 +6,11 @@ Class {
 }
 
 { #category : 'accessing' }
+DMUrban >> code [
+	^ 'U'
+]
+
+{ #category : 'accessing' }
 DMUrban >> color [
 	^ Color gray
 ]

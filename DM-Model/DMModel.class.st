@@ -2,11 +2,17 @@ Class {
 	#name : 'DMModel',
 	#superclass : 'CMModel',
 	#instVars : [
-		'plots'
+		'plots',
+		'activities'
 	],
 	#category : 'DM-Model',
 	#package : 'DM-Model'
 }
+
+{ #category : 'as yet unclassified' }
+DMModel class >> gameClass [
+	^ DMGame
+]
 
 { #category : 'as yet unclassified' }
 DMModel class >> modelName [
@@ -18,6 +24,16 @@ DMModel class >> modelName [
 DMModel class >> prefix [
 
 	^ 'DM'
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> activities [
+	^ activities
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> activityClasses [
+	^ { DMFarming. DMCocoaProduction. DMGathering. DMHunting. DMHouseholdLogging. DMCommercialLogging }
 ]
 
 { #category : 'as yet unclassified' }
@@ -33,6 +49,19 @@ DMModel >> applyInitialBoard [
 			self setCoverOf: plot index: index.
 			self setElevationOf: plot level: (self elevationMatrix at: index).
 			self setOwnerOf: plot code: (self ownerMatrix at: index) ] ]
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> buyPrices [
+	^ Dictionary new
+		at: #chicken put: 2;
+		at: #importedWood put: 6;
+		yourself
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> communities [
+	^ self entitiesOfClass: DMCommunity
 ]
 
 { #category : 'as yet unclassified' }
@@ -72,6 +101,12 @@ DMModel >> createCommunities [
 ]
 
 { #category : 'as yet unclassified' }
+DMModel >> createFamilies [
+	self communities do: [ :c |
+		3 timesRepeat: [ c addFamily: (self newEntity: DMFamily) ] ]
+]
+
+{ #category : 'as yet unclassified' }
 DMModel >> elevationMatrix [
 	^ #(
 	0 0 0 0 0 0 0 0
@@ -99,18 +134,34 @@ DMModel >> highValueTreesMatrix [
 	0 0 0 0 0 0 0 0 )
 ]
 
+{ #category : 'accessing' }
+DMModel >> huntingRollOn: aPlot [
+	| faces |
+	faces := (aPlot landCover class = DMPrimaryForest and: [ self primaryForestCount > 10 ])
+		ifTrue: [ self primaryForestDie ]
+		ifFalse: [ self secondaryForestDie ].
+	^ self selectRandomlyFrom: faces
+]
+
 { #category : 'as yet unclassified' }
 DMModel >> init [
 	<init>
+	activities := OrderedCollection new.
 	self createGridNumberOfRows: 9 numberOfColumns: 8 neighbourhood: 6 closed: true.
 	self createCommunities.
-	self applyInitialBoard
+	self applyInitialBoard.
+	self createFamilies
 ]
 
 { #category : 'initialization' }
 DMModel >> initialize [
 	super initialize.
-	plots := OrderedCollection new
+	activities := OrderedCollection new
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> isFree: aPlot [
+	^ activities noneSatisfy: [ :each | each plot == aPlot ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -132,13 +183,9 @@ DMModel >> lowValueTreesMatrix [
 	0 0 0 0 0 0 0 0 )
 ]
 
-{ #category : 'accessing' }
-DMModel >> newCoverAt: index [
-	| class |
-	class := self coverClasses at: (self coverMatrix at: index).
-	^ class isForest
-		ifTrue: [ class low: (self lowValueTreesMatrix at: index) high: (self highValueTreesMatrix at: index) ]
-		ifFalse: [ class new ]
+{ #category : 'as yet unclassified' }
+DMModel >> maxTrucks [
+	^ 6
 ]
 
 { #category : 'as yet unclassified' }
@@ -167,6 +214,49 @@ DMModel >> ownerMatrix [
 ]
 
 { #category : 'as yet unclassified' }
+DMModel >> place: anActivityClass on: aPlot for: aCommunity [
+	| reason activity |
+	reason := self reasonAgainst: anActivityClass on: aPlot for: aCommunity.
+	reason = 'ok' ifFalse: [ ^ reason ].
+	activity := anActivityClass new
+		plot: aPlot;
+		family: aCommunity freeFamilies first;
+		yourself.
+	aCommunity pay: activity cost.
+	activities add: activity.
+	activity start.
+	^ 'ok'
+]
+
+{ #category : 'accessing' }
+DMModel >> primaryForestCount [
+	^ self islandPlots count: [ :p | p landCover class = DMPrimaryForest ]
+]
+
+{ #category : 'accessing' }
+DMModel >> primaryForestDie [
+	^ #( 0 1 1 2 2 3 )
+]
+
+{ #category : 'accessing' }
+DMModel >> produce [
+	activities do: [ :each | each produce ]
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> reasonAgainst: anActivityClass on: aPlot for: aCommunity [
+
+	aPlot isOnIsland ifFalse: [ ^ 'notOnIsland' ].
+	(self isFree: aPlot) ifFalse: [ ^ 'plotTaken' ].
+	(aPlot hasOwner and: [ aPlot owner ~~ aCommunity ]) ifTrue: [ ^ 'ownedByOtherTeam' ].
+	(anActivityClass canBePlacedOn: aPlot) ifFalse: [ ^ 'notAllowedHere' ].
+	aCommunity freeFamilies isEmpty ifTrue: [ ^ 'noFamilyLeft' ].
+	(anActivityClass needsTruck and: [ self trucksInUse >= self maxTrucks ]) ifTrue: [ ^ 'noTruckLeft' ].
+	(anActivityClass costOn: aPlot) > aCommunity cash ifTrue: [ ^ 'notEnoughMoney' ].
+	^ 'ok'
+]
+
+{ #category : 'as yet unclassified' }
 DMModel >> roadMatrix [
 	^ #(
 	0 0 0 0 0 0 0 0
@@ -178,6 +268,23 @@ DMModel >> roadMatrix [
 	0 0 0 1 1 0 0 0
 	0 0 0 1 0 0 0 0
 	0 0 0 0 0 0 0 0 )
+]
+
+{ #category : 'accessing' }
+DMModel >> secondaryForestDie [
+	^ #( 0 0 1 1 1 2 )
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> sellPrices [
+	^ Dictionary new
+		at: #vegetables put: 2;
+		at: #gathering put: 1;
+		at: #hunting put: 1;
+		at: #cocoa put: 5;
+		at: #lowWood put: 3;
+		at: #highWood put: 7;
+		yourself
 ]
 
 { #category : 'initialization' }
@@ -214,5 +321,15 @@ DMModel >> setOwnerOf: aPlot code: aCode [
 { #category : 'stepping' }
 DMModel >> step [
 	<control>
+	self islandPlots do: [ :plot | plot landCover evolve ]
+]
+
+{ #category : 'as yet unclassified' }
+DMModel >> trucksInUse [
+	^ activities count: [ :each | each needsTruck ]
+]
+
+{ #category : 'accessing' }
+DMModel >> updateForests [
 	self islandPlots do: [ :plot | plot landCover evolve ]
 ]
