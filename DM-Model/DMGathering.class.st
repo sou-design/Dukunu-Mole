@@ -20,11 +20,6 @@ DMGathering class >> label [
 	^ 'Gathering'
 ]
 
-{ #category : 'testing' }
-DMGathering >> canBePlacedOn: aPlot [
-	^ aPlot landCover isForest
-]
-
 { #category : 'accessing' }
 DMGathering >> produce [
 	self give: 1 of: #gathering
