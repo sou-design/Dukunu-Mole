@@ -26,6 +26,11 @@ DMActivity class >> costOn: aPlot [
 ]
 
 { #category : 'as yet unclassified' }
+DMActivity class >> familiesFrom: aCommunity [
+	^ aCommunity freeFamilies
+]
+
+{ #category : 'as yet unclassified' }
 DMActivity class >> isForestWithTrees: aPlot [
 	^ aPlot landCover isForest and: [ aPlot landCover trees notEmpty ]
 ]
@@ -63,7 +68,6 @@ DMActivity >> finish [
 { #category : 'accessing' }
 DMActivity >> give: anInteger of: aResource [
 	self community add: anInteger of: aResource.
-	self needsTruck ifTrue: [ self community sell: anInteger of: aResource ].
 	produced at: aResource put: (produced at: aResource ifAbsent: [ 0 ]) + anInteger
 ]
 

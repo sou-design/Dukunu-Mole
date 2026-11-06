@@ -5,7 +5,8 @@ Class {
 		'phase',
 		'placements',
 		'orders',
-		'reports'
+		'reports',
+		'runnerPresenter'
 	],
 	#category : 'DM-Game',
 	#package : 'DM-Game'
@@ -131,6 +132,17 @@ DMGame >> proceed [
 		^ server publishState ]
 ]
 
+{ #category : 'ui' }
+DMGame >> refreshCormasUI [
+	| builder |
+	[ runnerPresenter displayCurrentTimeStep.
+	builder := (runnerPresenter instVarNamed: 'spacePresenter') spaceBuilder.
+	builder renderIn: builder container.
+	builder container signalUpdate ]
+		on: Error
+		do: [ :e | Transcript showCr: 'Cormas window not refreshed: ' , e messageText ]
+]
+
 { #category : 'as yet unclassified' }
 DMGame >> reportOf: aCommunity [
 	^ reports at: aCommunity ifAbsentPut: [ Dictionary new ]
@@ -142,6 +154,8 @@ DMGame >> resolveMarket [
 	model := self cormasModel.
 	orders keysAndValuesDo: [ :community :order |
 		| foodShort woodShort loan needsMet |
+		(order at: 'sell') keysAndValuesDo: [ :resource :n | community sell: n of: resource asSymbol ].
+		community sell: (community amountOf: #cocoa) of: #cocoa.
 		foodShort := community foodNeed - community foodAvailable max: 0.
 		woodShort := community woodNeed - community woodAvailable max: 0.
 		loan := foodShort * (model buyPrices at: #chicken)
@@ -160,16 +174,20 @@ DMGame >> resolveMarket [
 
 { #category : 'initialization' }
 DMGame >> resolvePlacements [
-	| model |
+	| model cards |
 	model := self cormasModel.
-	placements keysAndValuesDo: [ :community :cards |
-		cards do: [ :card |
-			model activityClasses
-				detect: [ :each | each code = (card at: 'code') ]
-				ifFound: [ :class |
-					((model place: class on: (model cellAt: (card at: 'plot')) for: community) = 'ok'
-						and: [ class = DMHunting ]) ifTrue: [
-							card at: 'animals' ifPresent: [ :n | model activities last animals: n ] ] ] ] ]
+	cards := OrderedCollection new.
+	placements keysAndValuesDo: [ :community :list |
+		list do: [ :card | cards add: community -> card ] ].
+	cards := (cards select: [ :each | (each value at: 'code') = 'skilledJob' ]) shuffled
+		, (cards reject: [ :each | (each value at: 'code') = 'skilledJob' ]).
+	cards do: [ :each |
+		model activityClasses
+			detect: [ :class | class code = (each value at: 'code') ]
+			ifFound: [ :class |
+				((model place: class on: (model cellAt: (each value at: 'plot')) for: each key) = 'ok'
+					and: [ class = DMHunting ]) ifTrue: [
+						each value at: 'animals' ifPresent: [ :n | model activities last animals: n ] ] ] ]
 ]
 
 { #category : 'instance creation' }
@@ -177,8 +195,15 @@ DMGame >> round [
 	^ self currentTimeStep + 1
 ]
 
+{ #category : 'simulation runner - running' }
+DMGame >> runStep [
+	super runStep.
+	server publishState
+]
+
 { #category : 'accessing' }
 DMGame >> runnerPresenter: aPresenter [
+	runnerPresenter := aPresenter
 
 ]
 
@@ -201,7 +226,7 @@ DMGame >> startRound [
 	reports := Dictionary new
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'initialization' }
 DMGame >> stateFor: aClient [
 	| model state community |
 	model := self cormasModel.
@@ -218,6 +243,7 @@ DMGame >> stateFor: aClient [
 		state
 			at: 'community' put: (self communityState: community);
 			at: 'options' put: (phase = 'activities' ifTrue: [ self optionsFor: community ] ifFalse: [ #() ]) ].
+	aClient role = DMParkManagerRole ifTrue: [ state at: 'parkManager' put: true ].
 	aClient role = DMGameMasterRole ifTrue: [
 		state at: 'teams' put: (model communities collect: [ :c | self communityState: c ]) asArray ].
 	^ state

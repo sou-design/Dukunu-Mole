@@ -28,7 +28,7 @@ DMModel >> activities [
 
 { #category : 'as yet unclassified' }
 DMModel >> activityClasses [
-	^ { DMFarming. DMFarmingWithTruck. DMCocoaProduction. DMGathering. DMHunting. DMHouseholdLogging. DMCommercialLogging }
+	^ { DMFarming. DMCocoaProduction. DMGathering. DMHunting. DMHouseholdLogging. DMCommercialLogging. DMMotoTaxiDriver. DMSkilledJob }
 ]
 
 { #category : 'as yet unclassified' }
@@ -215,7 +215,7 @@ DMModel >> place: anActivityClass on: aPlot for: aCommunity [
 	reason = 'ok' ifFalse: [ ^ reason ].
 	activity := anActivityClass new
 		plot: aPlot;
-		family: aCommunity freeFamilies first;
+		family: (anActivityClass familiesFrom: aCommunity) first;
 		yourself.
 	aCommunity pay: activity cost.
 	activities add: activity.
@@ -240,12 +240,13 @@ DMModel >> produce [
 
 { #category : 'as yet unclassified' }
 DMModel >> reasonAgainst: anActivityClass on: aPlot for: aCommunity [
-
 	aPlot isOnIsland ifFalse: [ ^ 'notOnIsland' ].
-	(self isFree: aPlot) ifFalse: [ ^ 'plotTaken' ].
+	((self isFree: aPlot) or: [ anActivityClass inheritsFrom: DMTownJob ]) ifFalse: [ ^ 'plotTaken' ].
 	(aPlot hasOwner and: [ aPlot owner ~~ aCommunity ]) ifTrue: [ ^ 'ownedByOtherTeam' ].
 	(anActivityClass canBePlacedOn: aPlot) ifFalse: [ ^ 'notAllowedHere' ].
-	aCommunity freeFamilies isEmpty ifTrue: [ ^ 'noFamilyLeft' ].
+	(anActivityClass familiesFrom: aCommunity) isEmpty ifTrue: [ ^ 'noFamilyLeft' ].
+	(anActivityClass = DMSkilledJob and: [
+		(activities count: [ :a | a class = DMSkilledJob ]) >= 2 ]) ifTrue: [ ^ 'noSkilledJobLeft' ].
 	(anActivityClass needsTruck and: [ self trucksInUse >= self maxTrucks ]) ifTrue: [ ^ 'noTruckLeft' ].
 	(anActivityClass costOn: aPlot) > aCommunity cash ifTrue: [ ^ 'notEnoughMoney' ].
 	^ 'ok'
@@ -274,6 +275,8 @@ DMModel >> secondaryForestDie [
 DMModel >> sellPrices [
 	^ Dictionary new
 		at: #vegetables put: 2;
+		at: #gathering put: 1;
+		at: #hunting put: 1;
 		at: #cocoa put: 3;
 		at: #lowWood put: 5;
 		at: #highWood put: 5;

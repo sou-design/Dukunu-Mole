@@ -14,6 +14,6 @@ DMCommercialLogging class >> needsTruck [
 DMCommercialLogging >> produce [
 	| felled |
 	felled := plot landCover fellAllTrees.
-	(felled anySatisfy: [ :t | t isHighValue not ]) ifTrue: [ self give: 1 of: #lowWood ].
-	(felled anySatisfy: [ :t | t isHighValue ]) ifTrue: [ self give: 1 of: #highWood ]
+	self give: (felled count: [ :t | t isHighValue not ]) of: #lowWood.
+	self give: (felled count: [ :t | t isHighValue ]) of: #highWood
 ]

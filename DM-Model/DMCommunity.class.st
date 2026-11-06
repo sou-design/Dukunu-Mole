@@ -90,6 +90,11 @@ DMCommunity >> displayColor [
 	^ CMColor fromHexString: (hex at: color)
 ]
 
+{ #category : 'as yet unclassified' }
+DMCommunity >> earn: anInteger [
+	cash := cash + anInteger
+]
+
 { #category : 'adding' }
 DMCommunity >> educatedCount [
 	^ families count: [ :f | f isEducated ]
