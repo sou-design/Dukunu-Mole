@@ -7,17 +7,17 @@ Class {
 
 { #category : 'testing' }
 DMSecondaryForest >> canRegrow [
-	^ (plot hasRoad and: [ self lowValueTrees >= 1 ]) not
-]
-
-{ #category : 'accessing' }
-DMSecondaryForest >> code [
-	^ 'S'
+	^ plot cocoaYear = 0 and: [ (plot hasRoad and: [ self lowValueTrees >= 1 ]) not ]
 ]
 
 { #category : 'accessing' }
 DMSecondaryForest >> color [
 	^ Color r: 0.49 g: 0.73 b: 0.34
+]
+
+{ #category : 'testing' }
+DMSecondaryForest >> degrade [
+
 ]
 
 { #category : 'as yet unclassified' }

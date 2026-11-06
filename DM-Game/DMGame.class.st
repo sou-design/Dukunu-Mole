@@ -3,12 +3,9 @@ Class {
 	#superclass : 'CMGame',
 	#instVars : [
 		'phase',
-		'runnerPresenter',
-		'turnEndsAt',
 		'placements',
 		'orders',
-		'reports',
-		'lock'
+		'reports'
 	],
 	#category : 'DM-Game',
 	#package : 'DM-Game'
@@ -17,11 +14,6 @@ Class {
 { #category : 'instance creation' }
 DMGame >> availableRoles [
 	^ super availableRoles reject: [ :each | each = DMCommunityRole ]
-]
-
-{ #category : 'instance creation' }
-DMGame >> canStart [
-	^ server canStart
 ]
 
 { #category : 'as yet unclassified' }
@@ -79,11 +71,9 @@ DMGame >> communityState: aCommunity [
 DMGame >> initialize [
 	super initialize.
 	phase := 'lobby'.
-	turnEndsAt := DateAndTime now.
-	placements := OrderedCollection new.
+	placements := OrderedDictionary new.
 	orders := Dictionary new.
 	reports := Dictionary new.
-	lock := Mutex new.
 	server := DMGameServer new.
 	server game: self
 ]
@@ -96,19 +86,6 @@ DMGame >> isCommunityClient: aClient [
 { #category : 'instance creation' }
 DMGame >> maxRounds [
 	^ 4
-]
-
-{ #category : 'instance creation' }
-DMGame >> model [
-	^ self cormasModel
-]
-
-{ #category : 'instance creation' }
-DMGame >> newGame [
-	self initializeSimulation.
-	phase := 'lobby'.
-	placements := OrderedCollection new.
-	orders := Dictionary new
 ]
 
 { #category : 'as yet unclassified' }
@@ -154,16 +131,6 @@ DMGame >> proceed [
 		^ server publishState ]
 ]
 
-{ #category : 'initialization' }
-DMGame >> proceed: seconds [
-	^ lock critical: [
-		(phase = 'activitiesTurn' or: [ phase = 'marketTurn' ])
-			ifTrue: [
-				turnEndsAt := DateAndTime now.
-				'closing' ]
-			ifFalse: [ self proceedFrom: phase seconds: seconds ] ]
-]
-
 { #category : 'as yet unclassified' }
 DMGame >> reportOf: aCommunity [
 	^ reports at: aCommunity ifAbsentPut: [ Dictionary new ]
@@ -175,8 +142,6 @@ DMGame >> resolveMarket [
 	model := self cormasModel.
 	orders keysAndValuesDo: [ :community :order |
 		| foodShort woodShort loan needsMet |
-		(order at: 'sell') keysAndValuesDo: [ :resource :n | community sell: n of: resource asSymbol ].
-		community sell: (community amountOf: #cocoa) of: #cocoa.
 		foodShort := community foodNeed - community foodAvailable max: 0.
 		woodShort := community woodNeed - community woodAvailable max: 0.
 		loan := foodShort * (model buyPrices at: #chicken)
@@ -201,7 +166,10 @@ DMGame >> resolvePlacements [
 		cards do: [ :card |
 			model activityClasses
 				detect: [ :each | each code = (card at: 'code') ]
-				ifFound: [ :class | model place: class on: (model cellAt: (card at: 'plot')) for: community ] ] ]
+				ifFound: [ :class |
+					((model place: class on: (model cellAt: (card at: 'plot')) for: community) = 'ok'
+						and: [ class = DMHunting ]) ifTrue: [
+							card at: 'animals' ifPresent: [ :n | model activities last animals: n ] ] ] ] ]
 ]
 
 { #category : 'instance creation' }
@@ -209,9 +177,9 @@ DMGame >> round [
 	^ self currentTimeStep + 1
 ]
 
-{ #category : 'instance creation' }
+{ #category : 'accessing' }
 DMGame >> runnerPresenter: aPresenter [
-	runnerPresenter := aPresenter
+
 ]
 
 { #category : 'initialization' }

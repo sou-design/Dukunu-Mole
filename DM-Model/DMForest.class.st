@@ -90,7 +90,8 @@ DMForest >> lowValueTrees [
 
 { #category : 'initialization' }
 DMForest >> regrow [
-	self canRegrow ifTrue: [ self addTree: DMLowValueTree ].
+	self canRegrow ifFalse: [ ^ self ].
+	self addTree: DMLowValueTree.
 	self transition
 ]
 

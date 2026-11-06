@@ -10,11 +10,6 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-DMModel class >> gameClass [
-	^ DMGame
-]
-
-{ #category : 'as yet unclassified' }
 DMModel class >> modelName [
 
 	^ 'DM'
@@ -33,7 +28,7 @@ DMModel >> activities [
 
 { #category : 'as yet unclassified' }
 DMModel >> activityClasses [
-	^ { DMFarming. DMCocoaProduction. DMGathering. DMHunting. DMHouseholdLogging. DMCommercialLogging }
+	^ { DMFarming. DMFarmingWithTruck. DMCocoaProduction. DMGathering. DMHunting. DMHouseholdLogging. DMCommercialLogging }
 ]
 
 { #category : 'as yet unclassified' }
@@ -279,11 +274,9 @@ DMModel >> secondaryForestDie [
 DMModel >> sellPrices [
 	^ Dictionary new
 		at: #vegetables put: 2;
-		at: #gathering put: 1;
-		at: #hunting put: 1;
-		at: #cocoa put: 5;
-		at: #lowWood put: 3;
-		at: #highWood put: 7;
+		at: #cocoa put: 3;
+		at: #lowWood put: 5;
+		at: #highWood put: 5;
 		yourself
 ]
 
@@ -321,7 +314,12 @@ DMModel >> setOwnerOf: aPlot code: aCode [
 { #category : 'stepping' }
 DMModel >> step [
 	<control>
-	self islandPlots do: [ :plot | plot landCover evolve ]
+	(self islandPlots select: [ :p | p cocoaYear > 0 ]) do: [ :p |
+		(activities anySatisfy: [ :a | a plot == p and: [ a class = DMCocoaProduction ] ])
+			ifFalse: [ p cocoaYear: 0 ] ].
+	activities do: [ :each | each finish ].
+	activities := OrderedCollection new.
+	self updateForests
 ]
 
 { #category : 'as yet unclassified' }

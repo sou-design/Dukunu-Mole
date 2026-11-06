@@ -5,16 +5,6 @@ Class {
 	#package : 'DM-Model'
 }
 
-{ #category : 'as yet unclassified' }
-DMHouseholdLogging class >> code [
-	^ 'householdWood'
-]
-
-{ #category : 'as yet unclassified' }
-DMHouseholdLogging class >> label [
-	^ 'Household wood'
-]
-
 { #category : 'accessing' }
 DMHouseholdLogging >> produce [
 	| forest tree |

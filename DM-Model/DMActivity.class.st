@@ -21,11 +21,6 @@ DMActivity class >> canBePlacedOn: aPlot [
 ]
 
 { #category : 'as yet unclassified' }
-DMActivity class >> code [
-	^ self subclassResponsibility
-]
-
-{ #category : 'as yet unclassified' }
 DMActivity class >> costOn: aPlot [
 	^ (self baseCostOn: aPlot) + (self needsTruck ifTrue: [ aPlot transportCost ] ifFalse: [ 0 ])
 ]
@@ -36,18 +31,8 @@ DMActivity class >> isForestWithTrees: aPlot [
 ]
 
 { #category : 'as yet unclassified' }
-DMActivity class >> label [
-	^ self subclassResponsibility
-]
-
-{ #category : 'as yet unclassified' }
 DMActivity class >> needsTruck [
 	^ false
-]
-
-{ #category : 'accessing' }
-DMActivity >> code [
-	^ self class code
 ]
 
 { #category : 'accessing' }
@@ -78,6 +63,7 @@ DMActivity >> finish [
 { #category : 'accessing' }
 DMActivity >> give: anInteger of: aResource [
 	self community add: anInteger of: aResource.
+	self needsTruck ifTrue: [ self community sell: anInteger of: aResource ].
 	produced at: aResource put: (produced at: aResource ifAbsent: [ 0 ]) + anInteger
 ]
 

@@ -1,6 +1,9 @@
 Class {
 	#name : 'DMHunting',
 	#superclass : 'DMActivity',
+	#instVars : [
+		'animals'
+	],
 	#category : 'DM-Model',
 	#package : 'DM-Model'
 }
@@ -10,17 +13,18 @@ DMHunting class >> canBePlacedOn: aPlot [
 	^ aPlot landCover isForest
 ]
 
-{ #category : 'as yet unclassified' }
-DMHunting class >> code [
-	^ 'hunting'
-]
-
-{ #category : 'as yet unclassified' }
-DMHunting class >> label [
-	^ 'Hunting'
+{ #category : 'accessing' }
+DMHunting >> animals: anInteger [
+	animals := anInteger
 ]
 
 { #category : 'accessing' }
 DMHunting >> produce [
-	self give: (plot cormasModel huntingRollOn: plot) of: #hunting
+	self give: animals of: #hunting
+]
+
+{ #category : 'accessing' }
+DMHunting >> start [
+	super start.
+	animals := plot cormasModel huntingRollOn: plot
 ]

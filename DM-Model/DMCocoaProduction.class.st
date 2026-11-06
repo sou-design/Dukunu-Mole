@@ -17,16 +17,6 @@ DMCocoaProduction class >> canBePlacedOn: aPlot [
 ]
 
 { #category : 'as yet unclassified' }
-DMCocoaProduction class >> code [
-	^ 'cocoa'
-]
-
-{ #category : 'as yet unclassified' }
-DMCocoaProduction class >> label [
-	^ 'Cocoa'
-]
-
-{ #category : 'as yet unclassified' }
 DMCocoaProduction class >> needsTruck [
 	^ true
 ]

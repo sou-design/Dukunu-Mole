@@ -176,6 +176,15 @@ DMCommunity >> repayDebt [
 	^ paid
 ]
 
+{ #category : 'as yet unclassified' }
+DMCommunity >> sell: anInteger of: aResource [
+  	| count |
+  	count := (anInteger max: 0) min: (stock at: aResource).
+  	stock at: aResource put: (stock at: aResource) - count.
+  	cash := cash + (count * (self cormasModel sellPrices at: aResource)).
+  	^ count
+]
+
 { #category : 'accessing' }
 DMCommunity >> stock [
 	^ stock

@@ -30,27 +30,6 @@ DMPlot >> cocoaYear: anInteger [
 	cocoaYear := anInteger
 ]
 
-{ #category : 'as yet unclassified' }
-DMPlot >> distanceToRoad [
-	| visited frontier distance |
-	hasRoad ifTrue: [ ^ 0 ].
-	visited := Set with: self.
-	frontier := OrderedCollection with: self.
-	distance := 0.
-	[ frontier notEmpty ] whileTrue: [
-		| next |
-		distance := distance + 1.
-		next := OrderedCollection new.
-		frontier do: [ :plot |
-			(plot neighbourhood select: [ :n | n isOnIsland and: [ (visited includes: n) not ] ])
-				do: [ :n |
-					n hasRoad ifTrue: [ ^ distance ].
-					visited add: n.
-					next add: n ] ].
-		frontier := next ].
-	^ 0
-]
-
 { #category : 'initialization' }
 DMPlot >> elevation [
 	^ elevation
@@ -140,5 +119,30 @@ DMPlot >> pov [
 
 { #category : 'as yet unclassified' }
 DMPlot >> transportCost [
-	^ 1 + self distanceToRoad
+	| paths frontier |
+	hasRoad ifTrue: [ ^ 1 ].
+	paths := Dictionary new.
+	paths at: self put: (OrderedCollection with: self).
+	frontier := OrderedCollection with: self.
+	[ frontier notEmpty ] whileTrue: [
+		| next |
+		next := OrderedCollection new.
+		frontier do: [ :plot |
+			(plot neighbourhood select: [ :n | n isOnIsland and: [ (paths includesKey: n) not ] ])
+				do: [ :n |
+					| path |
+					path := (paths at: plot) copyWith: n.
+					n hasRoad ifTrue: [
+						| cost top |
+						cost := path size.
+						top := n elevation.
+						path reversed do: [ :c |
+							c elevation > top ifTrue: [
+								cost := cost + 1.
+								top := c elevation ] ].
+						^ cost ].
+					paths at: n put: path.
+					next add: n ] ].
+		frontier := next ].
+	^ 1
 ]

@@ -7,5 +7,5 @@ Class {
 
 { #category : 'as yet unclassified' }
 DMGreenRole class >> communityColor [
-	^ #blue
+	^ #green
 ]

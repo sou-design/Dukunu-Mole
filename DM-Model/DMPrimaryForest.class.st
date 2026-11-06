@@ -11,11 +11,6 @@ DMPrimaryForest >> canRegrow [
 ]
 
 { #category : 'accessing' }
-DMPrimaryForest >> code [
-	^ 'P'
-]
-
-{ #category : 'accessing' }
 DMPrimaryForest >> color [
 	^ Color r: 0.18 g: 0.42 b: 0.16
 ]

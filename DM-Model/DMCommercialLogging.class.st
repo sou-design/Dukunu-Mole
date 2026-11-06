@@ -6,16 +6,6 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-DMCommercialLogging class >> code [
-	^ 'commercialWood'
-]
-
-{ #category : 'as yet unclassified' }
-DMCommercialLogging class >> label [
-	^ 'Commercial wood'
-]
-
-{ #category : 'as yet unclassified' }
 DMCommercialLogging class >> needsTruck [
 	^ true
 ]
@@ -24,6 +14,6 @@ DMCommercialLogging class >> needsTruck [
 DMCommercialLogging >> produce [
 	| felled |
 	felled := plot landCover fellAllTrees.
-	self give: (felled count: [ :t | t isHighValue not ]) of: #lowWood.
-	self give: (felled count: [ :t | t isHighValue ]) of: #highWood
+	(felled anySatisfy: [ :t | t isHighValue not ]) ifTrue: [ self give: 1 of: #lowWood ].
+	(felled anySatisfy: [ :t | t isHighValue ]) ifTrue: [ self give: 1 of: #highWood ]
 ]
