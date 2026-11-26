@@ -14,6 +14,11 @@ DMHunting class >> canBePlacedOn: aPlot [
 ]
 
 { #category : 'accessing' }
+DMHunting >> animals [
+	^ animals
+]
+
+{ #category : 'accessing' }
 DMHunting >> animals: anInteger [
 	animals := anInteger
 ]

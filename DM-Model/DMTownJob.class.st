@@ -9,3 +9,8 @@ Class {
 DMTownJob class >> canBePlacedOn: aPlot [
 	^ aPlot landCover class = DMUrban and: [ aPlot cormasModel currentTimeStep >= 1 ]
 ]
+
+{ #category : 'as yet unclassified' }
+DMTownJob class >> sharesPlot [
+	^ true
+]

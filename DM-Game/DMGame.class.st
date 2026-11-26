@@ -6,11 +6,25 @@ Class {
 		'placements',
 		'orders',
 		'reports',
-		'runnerPresenter'
+		'runnerPresenter',
+		'guardChoice'
 	],
 	#category : 'DM-Game',
 	#package : 'DM-Game'
 }
+
+{ #category : 'round 3' }
+DMGame >> applyGuard [
+	| model |
+	model := self cormasModel.
+	guardChoice isEmpty ifTrue: [ ^ self ].
+	(model
+		inspect: (model cellAt: (guardChoice at: 'guard'))
+		fine: (guardChoice at: 'fine' ifAbsent: [ 0 ])) = 'ok' ifFalse: [ ^ self ].
+	(model inspection at: 'legal') ifTrue: [ ^ self ].
+	(self reportOf: (model communityOfColor: (model inspection at: 'team')))
+		at: 'controlled' put: true
+]
 
 { #category : 'instance creation' }
 DMGame >> availableRoles [
@@ -22,6 +36,15 @@ DMGame >> catchUp: aClient [
 	aClient isConnected ifTrue: [ aClient sendMessage: (self stateFor: aClient) ]
 ]
 
+{ #category : 'round 3' }
+DMGame >> caught [
+	| inspection |
+	inspection := self cormasModel inspection.
+	(inspection includesKey: 'legal') ifFalse: [ ^ 0 ].
+	(inspection at: 'legal') ifTrue: [ ^ 0 ].
+	^ 1
+]
+
 { #category : 'as yet unclassified' }
 DMGame >> cellStates [
 	| model columns |
@@ -30,7 +53,9 @@ DMGame >> cellStates [
 	^ (model cells collectWithIndex: [ :plot :index |
 		| cover activity |
 		cover := plot landCover.
-		activity := model activities detect: [ :each | each plot == plot ] ifNone: [ #none ].
+		activity := model activities
+			detect: [ :each | each plot == plot and: [ each class ~= DMEcoGuide ] ]
+			ifNone: [ #none ].
 		Dictionary new
 			at: 'id' put: index;
 			at: 'row' put: index - 1 // columns + 1;
@@ -45,6 +70,9 @@ DMGame >> cellStates [
 			at: 'cocoa' put: plot cocoaYear;
 			at: 'activity' put: (activity = #none ifTrue: [ '' ] ifFalse: [ activity class code ]);
 			at: 'activityTeam' put: (activity = #none ifTrue: [ '' ] ifFalse: [ activity community color ]);
+			at: 'park' put: (model isInPark: plot);
+			at: 'ecoGuides' put: ((model activities select: [ :each |
+				each plot == plot and: [ each class = DMEcoGuide ] ]) collect: [ :each | each community color ]) asArray;
 			yourself ]) asArray
 ]
 
@@ -68,6 +96,19 @@ DMGame >> communityState: aCommunity [
 		yourself
 ]
 
+{ #category : 'round 3' }
+DMGame >> createParkFrom: aDictionary [
+	| model rules forbidden |
+	model := self cormasModel.
+	forbidden := aDictionary at: 'forbidden' ifAbsent: [ #() ].
+	rules := Dictionary new.
+	self parkActivityClasses do: [ :class |
+		rules at: class put: (forbidden includes: class code) not ].
+	^ model
+		setPark: ((aDictionary at: 'park') collect: [ :id | model cellAt: id ])
+		rules: rules
+]
+
 { #category : 'initialization' }
 DMGame >> initialize [
 	super initialize.
@@ -75,6 +116,7 @@ DMGame >> initialize [
 	placements := OrderedDictionary new.
 	orders := Dictionary new.
 	reports := Dictionary new.
+	guardChoice := Dictionary new.
 	server := DMGameServer new.
 	server game: self
 ]
@@ -97,13 +139,56 @@ DMGame >> optionsFor: aCommunity [
 	model cells doWithIndex: [ :plot :index |
 		model activityClasses do: [ :class |
 			(model reasonAgainst: class on: plot for: aCommunity) = 'ok' ifTrue: [
-				options add: (Dictionary new
+				| option |
+				option := Dictionary new
 					at: 'plot' put: index;
 					at: 'code' put: class code;
 					at: 'label' put: class label;
 					at: 'cost' put: (class costOn: plot);
-					yourself) ] ] ].
+					yourself.
+				((class inheritsFrom: DMLogging)
+					and: [ model isRound3OrLater and: [ class canHavePermitOn: plot ] ])
+						ifTrue: [ option at: 'permit' put: (class permitCostOn: plot) ].
+				options add: option ] ] ].
 	^ options asArray
+]
+
+{ #category : 'round 3' }
+DMGame >> parkActivityClasses [
+	^ { DMHunting. DMGathering. DMHouseholdLogging. DMCommercialLogging }
+]
+
+{ #category : 'round 3' }
+DMGame >> parkManagerState [
+	| model |
+	model := self cormasModel.
+	^ Dictionary new
+		at: 'canCreatePark' put: phase = 'park';
+		at: 'canCertify' put: (model isRound3OrLater and: [ #( 'park' 'activities' ) includes: phase ]);
+		at: 'caught' put: self caught;
+		at: 'forbidden' put: ((self parkActivityClasses reject: [ :class | model isAllowedInPark: class ])
+			collect: [ :class | class code ]) asArray;
+		at: 'certificatesLeft' put: 3 - model certificatesIssued;
+		at: 'teams' put: (model communities collect: [ :c |
+			Dictionary new
+				at: 'color' put: c color;
+				at: 'educated' put: c educatedCount;
+				at: 'cash' put: c cash;
+				at: 'certificates' put: (model certificatesOf: c);
+				yourself ]) asArray;
+		yourself
+]
+
+{ #category : 'round 3' }
+DMGame >> parkManagerSubmit: aValue [
+	| model |
+	model := self cormasModel.
+	(phase = 'park' and: [ aValue includesKey: 'park' ]) ifTrue: [ self createParkFrom: aValue ].
+	(phase = 'guard' and: [ aValue includesKey: 'guard' ]) ifTrue: [ guardChoice := aValue ].
+	(aValue includesKey: 'certify') ifTrue: [
+		(model isRound3OrLater and: [ #( 'park' 'activities' ) includes: phase ]) ifTrue: [
+			model certify: (model communityOfColor: (aValue at: 'certify') asSymbol) ] ].
+	server publishState
 ]
 
 { #category : 'instance creation' }
@@ -111,14 +196,37 @@ DMGame >> phase [
 	^ phase
 ]
 
+{ #category : 'activities' }
+DMGame >> place: anActivityClass card: aCard for: aCommunity [
+	| model activity |
+	model := self cormasModel.
+	(model place: anActivityClass on: (model cellAt: (aCard at: 'plot')) for: aCommunity) = 'ok'
+		ifFalse: [ ^ self ].
+	activity := model activities last.
+	anActivityClass = DMHunting ifTrue: [ self report: activity animals huntedOn: (aCard at: 'plot') for: aCommunity ].
+	(activity isLogging and: [ (aCard at: 'permit' ifAbsent: [ false ]) = true ]) ifTrue: [
+		(self reportOf: aCommunity) at: 'permit' put: (model buyPermitFor: activity) ]
+]
+
 { #category : 'stepping - auto' }
 DMGame >> proceed [
 	phase = 'ready' ifTrue: [
 		self startRound.
+		phase := self round = 3 ifTrue: [ 'park' ] ifFalse: [ 'activities' ].
+		^ server publishState ].
+	phase = 'park' ifTrue: [
 		phase := 'activities'.
 		^ server publishState ].
 	phase = 'activities' ifTrue: [
 		self resolvePlacements.
+		self cormasModel isRound3OrLater
+			ifTrue: [ phase := 'guard' ]
+			ifFalse: [
+				self cormasModel produce.
+				phase := 'market' ].
+		^ server publishState ].
+	phase = 'guard' ifTrue: [
+		self applyGuard.
 		self cormasModel produce.
 		phase := 'market'.
 		^ server publishState ].
@@ -141,6 +249,18 @@ DMGame >> refreshCormasUI [
 	builder container signalUpdate ]
 		on: Error
 		do: [ :e | Transcript showCr: 'Cormas window not refreshed: ' , e messageText ]
+]
+
+{ #category : 'activities' }
+DMGame >> report: animals huntedOn: aPlotId for: aCommunity [
+	| report |
+	report := self reportOf: aCommunity.
+	report
+		at: 'hunting'
+		put: ((report at: 'hunting' ifAbsent: [ #() ]) copyWith: (Dictionary new
+			at: 'plot' put: aPlotId;
+			at: 'animals' put: animals;
+			yourself))
 ]
 
 { #category : 'as yet unclassified' }
@@ -184,10 +304,7 @@ DMGame >> resolvePlacements [
 	cards do: [ :each |
 		model activityClasses
 			detect: [ :class | class code = (each value at: 'code') ]
-			ifFound: [ :class |
-				((model place: class on: (model cellAt: (each value at: 'plot')) for: each key) = 'ok'
-					and: [ class = DMHunting ]) ifTrue: [
-						each value at: 'animals' ifPresent: [ :n | model activities last animals: n ] ] ] ]
+			ifFound: [ :class | self place: class card: each value for: each key ] ]
 ]
 
 { #category : 'instance creation' }
@@ -221,9 +338,11 @@ DMGame >> startRound [
 	self round > 1 ifTrue: [
 		model communities do: [ :c | c addFamily: (model newEntity: DMFamily) ] ].
 	model communities do: [ :c | c repayDebt ].
+	model startRound: self round.
 	placements := OrderedDictionary new.
 	orders := Dictionary new.
-	reports := Dictionary new
+	reports := Dictionary new.
+	guardChoice := Dictionary new
 ]
 
 { #category : 'initialization' }
@@ -237,13 +356,17 @@ DMGame >> stateFor: aClient [
 		at: 'maxRounds' put: self maxRounds;
 		at: 'prices' put: model sellPrices;
 		at: 'board' put: self cellStates;
+		at: 'tourists' put: model tourists;
+		at: 'guided' put: model guided;
+		at: 'inspection' put: model inspection;
 		yourself.
 	(self isCommunityClient: aClient) ifTrue: [
 		community := self communityOf: aClient.
 		state
 			at: 'community' put: (self communityState: community);
 			at: 'options' put: (phase = 'activities' ifTrue: [ self optionsFor: community ] ifFalse: [ #() ]) ].
-	aClient role = DMParkManagerRole ifTrue: [ state at: 'parkManager' put: true ].
+	aClient role = DMParkManagerRole ifTrue: [
+		state at: 'parkManager' put: self parkManagerState ].
 	aClient role = DMGameMasterRole ifTrue: [
 		state at: 'teams' put: (model communities collect: [ :c | self communityState: c ]) asArray ].
 	^ state
@@ -251,6 +374,8 @@ DMGame >> stateFor: aClient [
 
 { #category : 'initialization' }
 DMGame >> submit: aValue from: aClient [
+	aClient role = DMParkManagerRole ifTrue: [ ^ self parkManagerSubmit: aValue ].
+	(self isCommunityClient: aClient) ifFalse: [ ^ self ].
 	phase = 'activities' ifTrue: [ placements at: (self communityOf: aClient) put: aValue ].
 	phase = 'market' ifTrue: [ orders at: (self communityOf: aClient) put: aValue ]
 ]

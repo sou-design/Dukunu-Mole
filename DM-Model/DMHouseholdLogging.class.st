@@ -5,6 +5,11 @@ Class {
 	#package : 'DM-Model'
 }
 
+{ #category : 'permits' }
+DMHouseholdLogging class >> permitCostOn: aPlot [
+	^ aPlot landCover class = DMPrimaryForest ifTrue: [ 1 ] ifFalse: [ 0 ]
+]
+
 { #category : 'accessing' }
 DMHouseholdLogging >> produce [
 	| forest tree |

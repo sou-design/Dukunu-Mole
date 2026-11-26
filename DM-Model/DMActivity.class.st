@@ -40,6 +40,11 @@ DMActivity class >> needsTruck [
 	^ false
 ]
 
+{ #category : 'as yet unclassified' }
+DMActivity class >> sharesPlot [
+	^ false
+]
+
 { #category : 'accessing' }
 DMActivity >> community [
 	^ family community
@@ -75,6 +80,11 @@ DMActivity >> give: anInteger of: aResource [
 DMActivity >> initialize [
 	super initialize.
 	produced := Dictionary new
+]
+
+{ #category : 'testing' }
+DMActivity >> isLogging [
+	^ false
 ]
 
 { #category : 'accessing' }

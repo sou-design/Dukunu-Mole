@@ -110,6 +110,9 @@ DMPlot >> pov [
 	self hasOwner ifTrue: [
 		borderColor := owner displayColor.
 		borderWidth := 0.05 ].
+	(self isOnIsland and: [ self cormasModel isInPark: self ]) ifTrue: [
+		borderColor := CMColor white.
+		borderWidth := 0.08 ].
 	^ CMPointOfView new
 		color: landCover color;
 		borderWidth: borderWidth;

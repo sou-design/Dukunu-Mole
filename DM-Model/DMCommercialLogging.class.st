@@ -10,6 +10,11 @@ DMCommercialLogging class >> needsTruck [
 	^ true
 ]
 
+{ #category : 'permits' }
+DMCommercialLogging class >> permitCostOn: aPlot [
+	^ aPlot landCover class = DMPrimaryForest ifTrue: [ 2 ] ifFalse: [ 1 ]
+]
+
 { #category : 'accessing' }
 DMCommercialLogging >> produce [
 	| felled |
