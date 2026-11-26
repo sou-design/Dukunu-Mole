@@ -1,0 +1,67 @@
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 12px 24px; font-family: system-ui, sans-serif; background: #F5F1E8; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; }
+h1 { font-size: 1.3rem; margin: 12px 0; }
+h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.hidden { display: none !important; }
+.card { background: #fff; border-radius: 10px; padding: 12px; margin: 10px 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
+input, select, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #bbb; }
+input[type=number] { width: 5em; }
+button { background: #eee; cursor: pointer; margin: 4px 4px 0 0; }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: #2F855A; color: #fff; border: none; width: 100%; margin-top: 12px; }
+label { display: block; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; }
+.status { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+.counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.counters div { background: #fff; border-radius: 8px; padding: 6px; text-align: center; }
+.counters span { display: block; font-size: .7rem; color: #666; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.dot.on { background: #2F855A; }
+.dot.off { background: #C53030; }
+.cart { padding-left: 18px; }
+.cart button { padding: 2px 8px; }
+#msg { position: fixed; left: 12px; right: 12px; bottom: 8px; margin: 0; padding: 8px; border-radius: 8px; text-align: center; }
+#msg:empty { display: none; }
+#msg.info { background: #E2E8F0; }
+#msg.ok { background: #C6F6D5; }
+#msg.error { background: #FED7D7; }
+.board { display: block; width: 100%; max-width: 480px; max-height: 60vh; margin: 0 auto; }
+.cell.selectable polygon { stroke-dasharray: 5 3; stroke-width: 3; }
+.cell.selected polygon { stroke-dasharray: none; fill-opacity: .6; }
+.cell { cursor: pointer; }
+.badge { font-size: 11px; font-weight: bold; fill: #fff; text-anchor: middle; }
+.badge.dark { fill: #000; }
+.cocoa { font-size: 10px; font-weight: bold; fill: #6B3E26; }
+.gm-layout { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 12px; }
+@media (max-width: 800px) { .gm-layout { grid-template-columns: 1fr; } }
+.qr { width: 200px; margin: 0 auto; }
+.roads line { stroke: #4A4A4A; stroke-width: 7; stroke-linecap: round; }
+.items, .roads { pointer-events: none; }
+.cell.dim polygon { fill-opacity: .45; }
+.option { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 6px 0 0; padding: 12px; text-align: left; background: #F7F7F2; border: 1px solid #ccc; border-radius: 10px; }
+.option small, .row small { color: #666; }
+div.option { display: block; }
+.choices { display: flex; gap: 6px; margin-top: 6px; }
+.choices button { flex: 1; min-width: 0; padding: 10px 0; margin: 0; font-size: .9rem; }
+.placed { margin: 6px 0; padding: 8px; background: #EEF6EA; border-radius: 8px; }
+.help { color: #555; margin: 0 0 8px; }
+.warn { background: #FFF4D6; padding: 8px; border-radius: 8px; }
+.needs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.needs div { background: #F2F2F2; border-radius: 8px; padding: 6px; text-align: center; }
+.needs span { display: block; font-size: .7rem; color: #666; }
+.needs .ok { background: #DDF3E4; }
+.needs .short { background: #FDE2E2; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eee; }
+.row small { display: block; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 40px; height: 40px; margin: 0; font-size: 1.2rem; }
+.stepper b { min-width: 1.5em; text-align: center; }
+.sendbar { position: sticky; bottom: 0; background: #fff; padding-top: 8px; }
+.sendbar span { font-size: .8rem; }
+.sendbar .todo { color: #B7791F; }
+.sendbar .done { color: #2F855A; }
+.pawns { letter-spacing: 2px; color: #2F855A; }
+.pawns i { font-style: normal; color: #ccc; }
+label.check { display: flex; gap: 8px; align-items: center; padding: 6px 0; }

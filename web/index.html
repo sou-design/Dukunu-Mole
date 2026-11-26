@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dukunú Molê</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>Dukunú Molê</h1>
+  <span id="connection" class="dot off"></span>
+</header>
+<form id="login" class="card">
+  <p>Enter your name to join.</p>
+  <input id="name" type="text" required minlength="2" maxlength="24" autocomplete="off" />
+  <button type="submit">Join</button>
+</form>
+<main id="game" class="hidden">
+  <section class="card status">
+    <strong id="team"></strong> <span id="round"></span> <span id="phase"></span>
+  </section>
+  <section id="counters" class="counters"></section>
+  <section id="boardBox" class="card"></section>
+  <section id="panel" class="card"></section>
+</main>
+<p id="msg"></p>
+<script src="/board.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

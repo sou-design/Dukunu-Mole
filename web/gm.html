@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dukunú Molê – Game master</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>Dukunú Molê – Game master</h1>
+  <span id="connection" class="dot off"></span>
+</header>
+<main class="gm-layout">
+  <div>
+    <section class="card">
+      <div id="round"></div>
+      <div id="phase"></div>
+      <button id="proceed" class="primary hidden"></button>
+    </section>
+    <section id="lobbyBox" class="card">
+      <div id="joinQr" class="qr"></div>
+      <p>Players scan the code or open <b id="joinUrl"></b>. Their phone must be on the same Wi-Fi.</p>
+      <p>In round 2, choose one player as ParkManager (manual p.12).</p>
+      <table id="players"></table>
+      <button id="start" class="primary">Start the game</button>
+    </section>
+    <section class="card"><table id="teams"></table></section>
+  </div>
+  <section id="boardBox" class="card"></section>
+</main>
+<script src="/qrcode.js"></script>
+<script src="/board.js"></script>
+<script src="/gm.js"></script>
+</body>
+</html>
