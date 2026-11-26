@@ -1,0 +1,5 @@
+{
+	"baseline" : "DMModel",
+	"summary": "Cormas implementation of the Dukunu Mole game",
+	"cormas" : "1.0-dev"
+}
