@@ -277,9 +277,9 @@ DMModel >> sellPrices [
 		at: #vegetables put: 2;
 		at: #gathering put: 1;
 		at: #hunting put: 1;
-		at: #cocoa put: 3;
-		at: #lowWood put: 5;
-		at: #highWood put: 5;
+		at: #cocoa put: 5;
+		at: #lowWood put: 3;
+		at: #highWood put: 7;
 		yourself
 ]
 
