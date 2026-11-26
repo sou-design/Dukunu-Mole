@@ -13,6 +13,32 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
+DMPlot >> aspectDefault: look [
+	<aspect>
+	| visible borderWidth borderColor |
+	visible := self isOnIsland or: [
+		self neighbourhood anySatisfy: [ :n | n isOnIsland ] ].
+	borderWidth := 0.01.
+	borderColor := visible
+		ifTrue: [ CMColor gray ]
+		ifFalse: [ CMColor white ].
+	self hasOwner ifTrue: [
+		borderColor := owner displayColor.
+		borderWidth := 0.05 ].
+	(self isOnIsland and: [ self cormasModel isInPark: self ]) ifTrue: [
+		borderColor := CMColor white.
+		borderWidth := 0.08 ].
+	
+	visible ifFalse: [ look beInvisible ].
+	
+	^ look 
+		color: landCover color;
+		borderThickness: borderWidth;
+		borderColor: borderColor;
+		yourself
+]
+
+{ #category : 'as yet unclassified' }
 DMPlot >> becomeForest: aForestClass low: lowCount high: highCount [
 
 	landCover isForest ifTrue: [ landCover removeAllTrees ].
@@ -95,29 +121,6 @@ DMPlot >> owner [
 DMPlot >> owner: anObject [
 
 	owner := anObject
-]
-
-{ #category : 'as yet unclassified' }
-DMPlot >> pov [
-	<pov>
-	| visible borderWidth borderColor |
-	visible := self isOnIsland or: [
-		self neighbourhood anySatisfy: [ :n | n isOnIsland ] ].
-	borderWidth := 0.01.
-	borderColor := visible
-		ifTrue: [ CMColor gray ]
-		ifFalse: [ CMColor white ].
-	self hasOwner ifTrue: [
-		borderColor := owner displayColor.
-		borderWidth := 0.05 ].
-	(self isOnIsland and: [ self cormasModel isInPark: self ]) ifTrue: [
-		borderColor := CMColor white.
-		borderWidth := 0.08 ].
-	^ CMPointOfView new
-		color: landCover color;
-		borderWidth: borderWidth;
-		borderColor: borderColor;
-		yourself
 ]
 
 { #category : 'as yet unclassified' }

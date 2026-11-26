@@ -11,6 +11,12 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
+DMFamily >> aspectDefault: look [
+	<aspect>
+	^ look color: community displayColor shape: #o size: 0.18
+]
+
+{ #category : 'as yet unclassified' }
 DMFamily >> beEducated [
 	educated := true
 ]
@@ -40,12 +46,6 @@ DMFamily >> isBusy [
 { #category : 'as yet unclassified' }
 DMFamily >> isEducated [
 	^ educated
-]
-
-{ #category : 'as yet unclassified' }
-DMFamily >> pov [
-	<pov>
-	^ CMPointOfView color: community displayColor shape: #o size: 0.18
 ]
 
 { #category : 'as yet unclassified' }
