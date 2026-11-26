@@ -33,6 +33,7 @@ th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; }
 .cell { cursor: pointer; }
 .badge { font-size: 11px; font-weight: bold; fill: #fff; text-anchor: middle; }
 .badge.dark { fill: #000; }
+.badge.small { font-size: 8px; }
 .cocoa { font-size: 10px; font-weight: bold; fill: #6B3E26; }
 .gm-layout { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 12px; }
 @media (max-width: 800px) { .gm-layout { grid-template-columns: 1fr; } }

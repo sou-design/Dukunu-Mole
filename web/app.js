@@ -11,6 +11,7 @@ const FOOD = ["chicken", "gathering", "hunting", "vegetables"];
 const WOOD = ["householdWood", "importedWood", "lowWood", "highWood"];
 const HELP = {
   ready: "The game master will start the round.",
+  park: "The park manager is creating the park. Wait.",
   activities: "Tap a plot, choose an activity for one family, then send your cards.",
   guard: "The forest guard is checking. Wait.",
   market: "Choose what you sell and how many families get health and education, then send.",
@@ -40,7 +41,7 @@ function onState(s) {
   const team = s.community;
   byId("team").textContent = team ? team.color + " team" : (s.parkManager ? "Park manager" : "No team yet");
   byId("team").style.color = team ? teamColor(team.color) : "";
-  byId("round").textContent = s.phase === "lobby" ? "" : `Round ${s.round} / ${s.maxRounds}`;
+  byId("round").textContent = s.phase === "lobby" ? "" : `Round ${s.round} / ${s.maxRounds}` + (s.tourists ? ` · ${s.tourists} tourists` : "");
   byId("phase").textContent = PHASES[s.phase] || s.phase;
   refresh();
 }
@@ -94,9 +95,14 @@ function sendBar(label, value) {
 }
 
 function cardsToSend() {
-  return cart.map(c => c.animals === undefined
-    ? { plot: c.plot, code: c.code, permit: c.permit === true }
-    : { plot: c.plot, code: c.code, animals: c.animals });
+  return cart.map(c => ({ plot: c.plot, code: c.code, permit: c.permit === true }));
+}
+
+function huntingHtml(report) {
+  const hunts = (report && report.hunting) || [];
+  return hunts.length
+    ? "<h2>Hunting</h2>" + hunts.map(h => `<p>Plot ${h.plot}: the die gave <b>${h.animals}</b> animal${h.animals === 1 ? "" : "s"}.</p>`).join("")
+    : "";
 }
 
 function renderActivities(panel) {
@@ -113,10 +119,13 @@ function renderActivities(panel) {
     const trees = plot.low + plot.high;
     html += `<h2>Plot ${plot.id} · ${COVER_NAMES[plot.cover] || ""}${trees ? ` · ${trees} tree${trees > 1 ? "s" : ""}` : ""}${plot.elevation ? ` · +${plot.elevation}` : ""}</h2>`;
     html += placed.map(([c, i]) => `<div class="placed"><b>${c.label}</b> (${price(c.cost)}) <button data-remove="${i}">Remove</button></div>`).join("");
-    if (!placed.length || inTown) {
-      html += here.map(o => o.code === "hunting"
-        ? `<div class="option">Hunting – how many animals? <small>${price(o.cost)}</small><div class="choices">
-            ${["random", 0, 1, 2, 3].map(n => `<button data-hunt="${n}" ${can(o.cost) ? "" : "disabled"}>${n}</button>`).join("")}</div></div>`
+    const hasGuide = placed.some(([c]) => c.code === "ecoGuide");
+    const hasMain = placed.some(([c]) => c.code !== "ecoGuide");
+    const shown = inTown ? here : here.filter(o => o.code === "ecoGuide" ? !hasGuide : !hasMain);
+    if (shown.length || !placed.length) {
+      html += shown.map(o => o.code === "hunting"
+        ? `<div class="option">Hunting – the die decides the animals <small>${price(o.cost)}</small><div class="choices">
+            <button data-hunt ${can(o.cost) ? "" : "disabled"}>Randomize</button></div></div>`
         : o.permit === undefined
           ? button(`data-code="${o.code}"`, o.label, o.cost)
           : button(`data-code="${o.code}" data-permit="${o.permit}"`, `${o.label} with permit`, o.cost + o.permit)
@@ -137,8 +146,8 @@ function renderActivities(panel) {
     add(card);
   });
   panel.querySelectorAll("[data-hunt]").forEach(b => b.onclick = () => {
-    const card = Object.assign({}, here.find(o => o.code === "hunting"));
-    if (b.dataset.hunt !== "random") { card.animals = +b.dataset.hunt; card.label = `Hunting (${card.animals})`; }
+    const card = Object.assign({}, here.find(o => o.code === "hunting"), { permit: false });
+    card.label = "Hunting (random)";
     add(card);
   });
   byId("send").onclick = () => {
@@ -169,6 +178,7 @@ function renderMarket(panel) {
       <div class="${wood >= t.woodNeed ? "ok" : "short"}"><span>Wood</span><b>${wood} / ${t.woodNeed}</b></div>
       <div><span>Cash after sales</span><b>${cash}</b></div>
     </div>
+    ${huntingHtml(t.report)}
     ${t.stock.cocoa ? `<p>Your ${t.stock.cocoa} cocoa will be sold for ${t.stock.cocoa * state.prices.cocoa}.</p>` : ""}
     ${food < t.foodNeed || wood < t.woodNeed ? "<p class='warn'>What is missing will be bought automatically, with a loan if needed.</p>" : ""}
     <h2>Sell</h2>
@@ -199,6 +209,7 @@ function renderResults(panel) {
       <div><span>Health and education</span><b>${r.health || 0}</b></div>
     </div>
     ${r.controlled ? "<p class='warn'><b>The forest guard caught you: wood confiscated.</b></p>" : ""}
+    ${huntingHtml(r)}
     <table>${Object.entries(state.community.stock).filter(([, v]) => v > 0)
       .map(([k, v]) => `<tr><td>${RESOURCE_NAMES[k]}</td><td>${v}</td></tr>`).join("")}</table>`;
 }
@@ -228,11 +239,13 @@ function renderParkManager() {
     panel.innerHTML = `<h2>Create the park</h2>
       <p class="help">Tap 5 plots, adjacent or not (${chosen.length} / 5 chosen), then choose what is forbidden inside.</p>
       ${Object.entries(PARK_RULES).map(([code, name]) => `<label class="check"><input type="checkbox" data-rule="${code}"> ${name} forbidden</label>`).join("")}
-      <button id="send" class="primary" ${chosen.length ? "" : "disabled"}>Create the park</button>`;
+      <button id="send" class="primary" ${chosen.length === 5 ? "" : "disabled"}>Create the park</button>
+      ${certificatesHtml(pm)}`;
     byId("send").onclick = () => {
       send({ type: "submit", value: { park: chosen, forbidden: [...panel.querySelectorAll("[data-rule]:checked")].map(i => i.dataset.rule) } });
       show("Park created.", "ok");
     };
+    bindCertificates(panel);
   } else if (guarding) {
     panel.innerHTML = `<h2>Forest guard</h2>
       <p class="help">Tap one plot with logging (W = household wood, L = commercial wood). Without permit, or against the park rules, the wood is confiscated.</p>
@@ -245,6 +258,24 @@ function renderParkManager() {
   } else {
     panel.innerHTML = state.round < 3
       ? "<p class='help'>You are the park manager. You no longer play with your community. You will create the park at the start of round 3.</p>"
-      : `<p>Forbidden in the park: ${pm.forbidden.map(code => PARK_RULES[code]).join(", ") || "nothing"}.</p><p class="help">Wait for the game master.</p>`;
+      : `<p>Forbidden in the park: ${pm.forbidden.map(code => PARK_RULES[code]).join(", ") || "nothing"}.</p><p class="help">Wait for the game master.</p>`
+        + certificatesHtml(pm);
+    bindCertificates(panel);
   }
+}
+
+function certificatesHtml(pm) {
+  if (!pm.canCertify) return "";
+  return `<h2>Eco-guide certificates (${pm.certificatesLeft} left)</h2>
+    <p class="help">1 dobra each, paid by the team. Prefer teams that invested in health and education.</p>
+    ${pm.teams.map(t => `<div class="row"><span style="color:${teamColor(t.color)}"><b>${t.color}</b>
+      <small>${t.educated} educated · ${t.cash} dobras · ${t.certificates} certificate${t.certificates === 1 ? "" : "s"}</small></span>
+      <button data-certify="${t.color}" ${pm.certificatesLeft > 0 && t.cash >= 1 ? "" : "disabled"}>Give</button></div>`).join("")}`;
+}
+
+function bindCertificates(panel) {
+  panel.querySelectorAll("[data-certify]").forEach(b => b.onclick = () => {
+    send({ type: "submit", value: { certify: b.dataset.certify } });
+    show(`Certificate given to the ${b.dataset.certify} team.`, "ok");
+  });
 }

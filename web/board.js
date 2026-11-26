@@ -3,13 +3,14 @@ const COVER_COLORS = { F: "#E9D8A6", U: "#B8B8B8", P: "#1E5631", S: "#76B947", X
 const PHASES = {
   lobby: "Waiting for players",
   ready: "Round ready to start",
+  park: "The park manager creates the park",
   activities: "Place your activities",
   guard: "The forest guard is checking",
   market: "Market",
   results: "Results of the round",
   ended: "Game over"
 };
-const ACTIVITY_LETTERS = { farming: "F", gathering: "G", hunting: "H", cocoa: "C", householdWood: "W", commercialWood: "L", motoTaxi: "M", skilledJob: "J" };
+const ACTIVITY_LETTERS = { farming: "F", gathering: "G", hunting: "H", cocoa: "C", householdWood: "W", commercialWood: "L", motoTaxi: "M", skilledJob: "J", ecoGuide: "E" };
 const COVER_NAMES = { F: "Farmland", U: "Town", P: "Primary forest", S: "Secondary forest" };
 const RESOURCE_NAMES = {
   vegetables: "Vegetables", gathering: "Gathering", hunting: "Game meat", cocoa: "Cocoa",
@@ -100,6 +101,10 @@ function drawBoard(container, cells, options = {}) {
       svg("circle", { cx: x, cy: y, r: 9, fill: teamColor(c.activityTeam), stroke: "#fff", "stroke-width": 1.5 }, g);
       svg("text", { x: x, y: y + 4, class: "badge" }, g).textContent = ACTIVITY_LETTERS[c.activity] || "?";
     }
+    (c.ecoGuides || []).forEach((team, i) => {
+      svg("circle", { cx: x + 14 - i * 10, cy: y + 12, r: 6, fill: teamColor(team), stroke: "#fff", "stroke-width": 1.5 }, g);
+      svg("text", { x: x + 14 - i * 10, y: y + 15, class: "badge small" }, g).textContent = "E";
+    });
     if (options.marks && options.marks[c.id]) {
       svg("circle", { cx: x, cy: y, r: 10, fill: "#fff", stroke: "#000", "stroke-width": 2 }, g);
       svg("text", { x: x, y: y + 4, class: "badge dark" }, g).textContent = options.marks[c.id];
