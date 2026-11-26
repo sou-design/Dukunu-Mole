@@ -9,11 +9,11 @@ Class {
 BaselineOfDMModel >> baseline: spec [
 	<baseline>
 	spec for: #common do: [
-		spec
+		"spec
 			baseline: 'CormasGameServer'
-			with: [ spec repository: 'github://cormas/cormas-game-server:main/src' ].
+			with: [ spec repository: 'github://cormas/cormas-game-server:main/src' ]."
 		spec
 			package: 'DM-Model';
 			package: 'DM-Model-Tests' with: [ spec requires: #( 'DM-Model' ) ];
-			package: 'DM-Game' with: [ spec requires: #( 'DM-Model' 'CormasGameServer' ) ] ]
+			package: 'DM-Game' with: [ spec requires: #( 'DM-Model' "'CormasGameServer'" ) ] ]
 ]
