@@ -5,6 +5,12 @@ Class {
 	#package : 'DM-Model'
 }
 
+{ #category : 'accessing' }
+DMHighValueTree >> aspectDefault: look [
+	<aspect>
+	^ look  image:  'highValueTree'; size: 0.26
+]
+
 { #category : 'initialization' }
 DMHighValueTree >> initialize [
 	super initialize.
@@ -14,10 +20,4 @@ DMHighValueTree >> initialize [
 { #category : 'testing' }
 DMHighValueTree >> isHighValue [
 	^ true
-]
-
-{ #category : 'accessing' }
-DMHighValueTree >> pov [
-	<pov>
-	^ CMPointOfView tile: DMTiles highValueTree size: 0.26
 ]

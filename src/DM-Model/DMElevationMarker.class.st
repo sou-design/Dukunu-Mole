@@ -9,6 +9,12 @@ Class {
 }
 
 { #category : 'initialization' }
+DMElevationMarker >> aspectDefault: look [
+	<aspect>
+	^ look image: 'elevation' , level printString ;size: 0.28
+]
+
+{ #category : 'initialization' }
 DMElevationMarker >> initialize [
 	super initialize.
 	level := 1
@@ -17,10 +23,4 @@ DMElevationMarker >> initialize [
 { #category : 'initialization' }
 DMElevationMarker >> level: anInteger [
 	level := anInteger
-]
-
-{ #category : 'initialization' }
-DMElevationMarker >> pov [
-	<pov>
-	^ CMPointOfView tile: (DMTiles elevation: level) size: 0.28
 ]

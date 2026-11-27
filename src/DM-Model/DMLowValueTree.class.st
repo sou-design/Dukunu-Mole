@@ -5,14 +5,14 @@ Class {
 	#package : 'DM-Model'
 }
 
+{ #category : 'accessing' }
+DMLowValueTree >> aspectDefault: look [
+	<aspect>
+	^ look image: 'lowValueTree';size: 0.2
+]
+
 { #category : 'initialization' }
 DMLowValueTree >> initialize [
 	super initialize.
 	value := 5  
-]
-
-{ #category : 'accessing' }
-DMLowValueTree >> pov [
-	<pov>
-	^ CMPointOfView tile: DMTiles lowValueTree size: 0.2
 ]

@@ -141,6 +141,23 @@ DMModel >> createFamilies [
 		3 timesRepeat: [ c addFamily: (self newEntity: DMFamily) ] ]
 ]
 
+{ #category : 'as yet unclassified' }
+DMModel >> createRoads [ 
+	| reached frontier |
+	reached := (self islandPlots select: [ :plot | plot landCover class = DMUrban ]) asOrderedCollection.
+	frontier := reached copy.
+	[ frontier isEmpty ] whileFalse: [
+		| next |
+		next := OrderedCollection new.
+		frontier do: [ :plot |
+			(plot neighbourhood select: [ :n | n hasRoad and: [ (reached includes: n) not ] ]) do: [ :n |
+				reached add: n.
+				next add: n.
+				self newEntity: DMRoad from: plot to: n ] ].
+		frontier := next ]
+
+]
+
 { #category : 'round 3' }
 DMModel >> ecoGuidesOf: aCommunity [
 	^ activities count: [ :a | a class = DMEcoGuide and: [ a community == aCommunity ] ]
@@ -203,6 +220,7 @@ DMModel >> init [
 	self createGridNumberOfRows: 9 numberOfColumns: 8 neighbourhood: 6 closed: true.
 	self createCommunities.
 	self applyInitialBoard.
+	self createRoads.
 	self createFamilies
 ]
 
