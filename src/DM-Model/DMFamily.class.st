@@ -11,9 +11,12 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-DMFamily >> aspectDefault: look [
+DMFamily >> aspectDefault: look [ 
 	<aspect>
-	^ look color: community displayColor shape: #o size: 0.18
+	look
+		color: community displayColor;
+		shape: #circle;
+		size: 0.18
 ]
 
 { #category : 'as yet unclassified' }

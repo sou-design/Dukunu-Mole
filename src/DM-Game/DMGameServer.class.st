@@ -132,14 +132,12 @@ DMGameServer >> startOn: aPortNumber [
 			response entity: (ZnEntity
 				with: (self class web: file)
 				type: (ZnMimeType forFilenameExtension: (file copyAfterLast: $.))) ] ].
-	"The same pictures as in the Cormas window"
-	"{ 'lowValueTree' -> DMTiles lowValueTree. 'highValueTree' -> DMTiles highValueTree.
-	  'elevation1' -> (DMTiles elevation: 1). 'elevation2' -> (DMTiles elevation: 2).
-	  'elevation3' -> (DMTiles elevation: 3) } do: [ :icon |
-		dispatcher map: '/icons/' , icon key , '.png' to: [ :request :response |
+	#( 'lowValueTree' 'highValueTree' 'elevation1' 'elevation2' 'elevation3' ) do: [ :icon |
+		dispatcher map: '/icons/' , icon , '.png' to: [ :request :response |
 			response entity: (ZnEntity
-				with: (ByteArray streamContents: [ :s | PNGReadWriter putForm: icon value largeForm onStream: s ])
-				type: ZnMimeType imagePng) ] ]."
+				with: (((IceRepository registry detect: [ :r | r name = 'Dukunu-Mole' ]) location / 'images' / (icon , '.png'))
+					binaryReadStreamDo: [ :stream | stream upToEnd ])
+				type: ZnMimeType imagePng) ] ].
 	server := self startZincFrom: aPortNumber.
 	server delegate: dispatcher
 ]
