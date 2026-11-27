@@ -52,6 +52,19 @@ DMModel >> applyInitialBoard [
 			self setOwnerOf: plot code: (self ownerMatrix at: index) ] ]
 ]
 
+{ #category : 'round 4' }
+DMModel >> buildRoadFrom: aCity [
+	| current |
+	current := aCity.
+	3 timesRepeat: [
+		| next |
+		next := self northWestOf: current.
+		next landCover class = DMPrimaryForest ifTrue: [ next := self northEastOf: current ].
+		next hasRoad: true.
+		self newEntity: DMRoad from: current to: next.
+		current := next ]
+]
+
 { #category : 'round 3' }
 DMModel >> buyPermitFor: aLoggingActivity [
 	| plot community price |
@@ -300,6 +313,24 @@ DMModel >> maxTrucks [
 	^ 6
 ]
 
+{ #category : 'round 4' }
+DMModel >> northEastOf: aPlot [
+	| index row column |
+	index := self cells indexOf: aPlot.
+	row := index - 1 // 8 + 1.
+	column := index - 1 \\ 8 + 1.
+	^ self cellAt: row - 1 at: (row odd ifTrue: [ column ] ifFalse: [ column + 1 ])
+]
+
+{ #category : 'round 4' }
+DMModel >> northWestOf: aPlot [
+	| index row column |
+	index := self cells indexOf: aPlot.
+	row := index - 1 // 8 + 1.
+	column := index - 1 \\ 8 + 1.
+	^ self cellAt: row - 1 at: (row odd ifTrue: [ column - 1 ] ifFalse: [ column ])
+]
+
 { #category : 'as yet unclassified' }
 DMModel >> ownerCodes [
 	^ Dictionary new
@@ -369,11 +400,12 @@ DMModel >> produce [
 DMModel >> reasonAgainst: anActivityClass on: aPlot for: aCommunity [
 	aPlot isOnIsland ifFalse: [ ^ 'notOnIsland' ].
 	((self isFree: aPlot) or: [ anActivityClass sharesPlot ]) ifFalse: [ ^ 'plotTaken' ].
-	(aPlot hasOwner and: [ aPlot owner ~~ aCommunity ]) ifTrue: [ ^ 'ownedByOtherTeam' ].
+	(aPlot hasOwner and: [ aPlot owner ~~ aCommunity and: [ (aPlot owner allows: aCommunity) not ] ])
+		ifTrue: [ ^ 'ownedByOtherTeam' ].
 	(anActivityClass canBePlacedOn: aPlot) ifFalse: [ ^ 'notAllowedHere' ].
 	(anActivityClass familiesFrom: aCommunity) isEmpty ifTrue: [ ^ 'noFamilyLeft' ].
 	(anActivityClass = DMSkilledJob and: [
-		(activities count: [ :a | a class = DMSkilledJob ]) >= 2 ]) ifTrue: [ ^ 'noSkilledJobLeft' ].
+		(activities count: [ :a | a class = DMSkilledJob and: [ a plot == aPlot ] ]) >= 2 ]) ifTrue: [ ^ 'noSkilledJobLeft' ].
 	(anActivityClass = DMEcoGuide and: [
 		(self ecoGuidesOf: aCommunity) >= (self certificatesOf: aCommunity) ]) ifTrue: [ ^ 'noCertificate' ].
 	(anActivityClass needsTruck and: [ self trucksInUse >= self maxTrucks ]) ifTrue: [ ^ 'noTruckLeft' ].
@@ -464,9 +496,12 @@ DMModel >> setPark: aCollectionOfPlots rules: aDictionary [
 
 { #category : 'round 3' }
 DMModel >> startRound: aRound [
+	aRound = 3 ifTrue: [ tourists := 3 ].
+	aRound = 4 ifTrue: [
+		tourists := guided + 1.
+		self urbanise ].
 	inspection := Dictionary new.
-	guided := 0.
-	aRound = 3 ifTrue: [ tourists := 3 ]
+	guided := 0
 ]
 
 { #category : 'stepping' }
@@ -493,4 +528,18 @@ DMModel >> trucksInUse [
 { #category : 'accessing' }
 DMModel >> updateForests [
 	self islandPlots do: [ :plot | plot landCover evolve ]
+]
+
+{ #category : 'round 4' }
+DMModel >> urbanise [
+	| newCity newFarmland red |
+	newCity := self cellAt: 7 at: 5.
+	newFarmland := self cellAt: 6 at: 4.
+	red := self communityOfColor: #red.
+	red ownedPlots remove: newCity ifAbsent: [ ].
+	newCity owner: #none.
+	newCity landCover: DMUrban new.
+	newFarmland owner: red.
+	red addOwnedPlot: newFarmland.
+	self buildRoadFrom: newCity
 ]

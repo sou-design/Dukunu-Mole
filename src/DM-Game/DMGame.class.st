@@ -66,6 +66,8 @@ DMGame >> cellStates [
 			at: 'high' put: (cover isForest ifTrue: [ cover highValueTrees ] ifFalse: [ 0 ]);
 			at: 'elevation' put: plot elevation;
 			at: 'road' put: plot hasRoad;
+			at: 'roadTo' put: (((model entitiesOfClass: DMRoad) select: [ :road | road from == plot ])
+				collect: [ :road | model cells indexOf: road to ]) asArray;
 			at: 'owner' put: (plot hasOwner ifTrue: [ plot owner color ] ifFalse: [ '' ]);
 			at: 'cocoa' put: plot cocoaYear;
 			at: 'activity' put: (activity = #none ifTrue: [ '' ] ifFalse: [ activity class code ]);
@@ -93,6 +95,7 @@ DMGame >> communityState: aCommunity [
 		at: 'foodNeed' put: aCommunity foodNeed;
 		at: 'woodNeed' put: aCommunity woodNeed;
 		at: 'report' put: (self reportOf: aCommunity);
+		at: 'allowed' put: (aCommunity allowed collect: [ :c | c color ]) asArray;
 		yourself
 ]
 
@@ -191,6 +194,18 @@ DMGame >> parkManagerSubmit: aValue [
 	server publishState
 ]
 
+{ #category : 'activities' }
+DMGame >> permission: aDictionary from: aClient [
+	| owner other |
+	(self isCommunityClient: aClient) ifFalse: [ ^ self ].
+	owner := self communityOf: aClient.
+	other := self cormasModel communityOfColor: (aDictionary at: 'team') asSymbol.
+	(aDictionary at: 'allow') = true
+		ifTrue: [ owner allow: other ]
+		ifFalse: [ owner refuse: other ].
+	server publishState
+]
+
 { #category : 'instance creation' }
 DMGame >> phase [
 	^ phase
@@ -204,6 +219,7 @@ DMGame >> place: anActivityClass card: aCard for: aCommunity [
 		ifFalse: [ ^ self ].
 	activity := model activities last.
 	anActivityClass = DMHunting ifTrue: [ self report: activity animals huntedOn: (aCard at: 'plot') for: aCommunity ].
+	anActivityClass = DMHouseholdLogging ifTrue: [ activity treeKind: (aCard at: 'tree' ifAbsent: [ 'low' ]) asSymbol ].
 	(activity isLogging and: [ (aCard at: 'permit' ifAbsent: [ false ]) = true ]) ifTrue: [
 		(self reportOf: aCommunity) at: 'permit' put: (model buyPermitFor: activity) ]
 ]
@@ -272,10 +288,14 @@ DMGame >> reportOf: aCommunity [
 DMGame >> resolveMarket [
 	| model |
 	model := self cormasModel.
-	orders keysAndValuesDo: [ :community :order |
-		| foodShort woodShort loan needsMet |
-		(order at: 'sell') keysAndValuesDo: [ :resource :n | community sell: n of: resource asSymbol ].
+	server playingCommunities asSet do: [ :community |
+		| order foodShort woodShort loan needsMet |
+		order := orders at: community ifAbsent: [ Dictionary new ].
+		(order at: 'sell' ifAbsent: [ Dictionary new ]) keysAndValuesDo: [ :resource :n |
+			(model sellPrices includesKey: resource asSymbol) ifTrue: [ community sell: n of: resource asSymbol ] ].
 		community sell: (community amountOf: #cocoa) of: #cocoa.
+		(order at: 'buy' ifAbsent: [ Dictionary new ]) keysAndValuesDo: [ :resource :n |
+			(model buyPrices includesKey: resource asSymbol) ifTrue: [ community buy: n of: resource asSymbol ] ].
 		foodShort := community foodNeed - community foodAvailable max: 0.
 		woodShort := community woodNeed - community woodAvailable max: 0.
 		loan := foodShort * (model buyPrices at: #chicken)
@@ -288,7 +308,7 @@ DMGame >> resolveMarket [
 			at: 'loan' put: loan;
 			at: 'needsMet' put: needsMet;
 			at: 'health' put: (needsMet
-				ifTrue: [ community payHealthAndEducation: (order at: 'health') ]
+				ifTrue: [ community payHealthAndEducation: (order at: 'health' ifAbsent: [ 0 ]) ]
 				ifFalse: [ 0 ]) ]
 ]
 
@@ -355,6 +375,7 @@ DMGame >> stateFor: aClient [
 		at: 'round' put: (self round min: self maxRounds);
 		at: 'maxRounds' put: self maxRounds;
 		at: 'prices' put: model sellPrices;
+		at: 'buyPrices' put: model buyPrices;
 		at: 'board' put: self cellStates;
 		at: 'tourists' put: model tourists;
 		at: 'guided' put: model guided;

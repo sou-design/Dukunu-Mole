@@ -6,16 +6,11 @@ Class {
 }
 
 { #category : 'as yet unclassified' }
-DMFarming class >> baseCostOn: aPlot [
-	^ 1
-]
-
-{ #category : 'as yet unclassified' }
 DMFarming class >> canBePlacedOn: aPlot [
 	^ aPlot landCover class = DMFarmland
 ]
 
 { #category : 'accessing' }
 DMFarming >> produce [
-	self give: 1 of: #vegetables
+	self give: (plot cormasModel primaryForestCount <= 10 ifTrue: [ 1 ] ifFalse: [ 2 ]) of: #vegetables
 ]

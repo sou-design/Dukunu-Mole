@@ -52,6 +52,7 @@ DMGameServer >> handleData: aDictionary forClient: aClient [
 	(type = 'gmStart' and: [ self canStart ]) ifTrue: [ ^ game startGame ].
 	type = 'gmProceed' ifTrue: [ ^ game proceed ].
 	type = 'submit' ifTrue: [ game submit: (aDictionary at: 'value') from: aClient ].
+	type = 'permission' ifTrue: [ ^ game permission: (aDictionary at: 'value') from: aClient ].
 	aClient sendMessage: self lobbyState.
 	game catchUp: aClient
 ]

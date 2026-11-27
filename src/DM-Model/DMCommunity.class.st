@@ -7,7 +7,8 @@ Class {
 		'families',
 		'cash',
 		'debt',
-		'stock'
+		'stock',
+		'allowed'
 	],
 	#category : 'DM-Model',
 	#package : 'DM-Model'
@@ -27,6 +28,21 @@ DMCommunity >> addFamily: aFamily [
 { #category : 'initialization' }
 DMCommunity >> addOwnedPlot: aPlot [
 	ownedPlots add: aPlot
+]
+
+{ #category : 'permission' }
+DMCommunity >> allow: aCommunity [
+	allowed add: aCommunity
+]
+
+{ #category : 'permission' }
+DMCommunity >> allowed [
+	^ allowed
+]
+
+{ #category : 'permission' }
+DMCommunity >> allows: aCommunity [
+	^ allowed includes: aCommunity
 ]
 
 { #category : 'adding' }
@@ -142,7 +158,8 @@ DMCommunity >> initialize [
 	families := OrderedCollection new.
 	cash := 3.
 	debt := 0.
-	stock := self emptyStock
+	stock := self emptyStock.
+	allowed := Set new
 ]
 
 { #category : 'adding' }
@@ -170,6 +187,11 @@ DMCommunity >> payHealthAndEducation: anInteger [
 	cash := cash - count.
 	(families first: count) do: [ :f | f beEducated ].
 	^ count
+]
+
+{ #category : 'permission' }
+DMCommunity >> refuse: aCommunity [
+	allowed remove: aCommunity ifAbsent: [ ]
 ]
 
 { #category : 'adding' }
